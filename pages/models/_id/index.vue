@@ -303,7 +303,7 @@ export default {
       }
 
       const modelUrl = this.fileUrl(path);
-      const curaLink = `cura://open?url=${encodeURIComponent(modelUrl)}`;
+      const curaLink = `cura://open?file=${encodeURI(modelUrl)}`;
       let visibilityChanged = false;
 
       const onVisibilityChange = () => {
