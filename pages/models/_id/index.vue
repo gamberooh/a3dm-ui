@@ -201,6 +201,14 @@
       span(v-if="!boxFilesToDownload") Show files ({{ model.uploads.length }})
       span(v-else) Close files box ({{ model.uploads.length }})
     .bg-green-50(v-if="boxFilesToDownload")
+      .px-3.pt-3(v-if="firstMeshUpload")
+        button.inline-flex.leading-6.justify-center.rounded-md.border.border-transparent.bg-blue-600.py-2.px-4.text-sm.font-medium.text-white.shadow-sm(
+          type="button"
+          class="hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+          @click="openInCura(firstMeshUpload.filepath)"
+        ) Open in Cura
+        p.text-xs.text-gray-600.mt-2
+          | Works if Cura is installed and registered in your OS. If not, a direct file download will open.
       ul.divide-y.divide-gray-200.rounded-b-md.border.border-gray-200(role="list")
         li.flex.items-center.justify-between.py-3.pl-3.pr-4.text-sm(v-for="upload in model.uploads" :key="upload.id")
           .flex.w-0.flex-1.items-center
@@ -249,6 +257,13 @@ export default {
   computed: {
     ...mapGetters(["isLoading"]),
     ...mapGetters("auth", ["me", "isLogged"]),
+    firstMeshUpload() {
+      if (!this.model.uploads || this.model.uploads.length === 0) {
+        return null;
+      }
+
+      return this.model.uploads.find((upload) => this.isMeshFile(upload.filepath));
+    },
   },
   created() {
     this.id = this.$route.params.id;
@@ -266,6 +281,48 @@ export default {
     });
   },
   methods: {
+    isMeshFile(path) {
+      if (!path) {
+        return false;
+      }
+
+      const lower = path.toLowerCase();
+      return lower.endsWith(".stl") || lower.endsWith(".obj");
+    },
+    fileUrl(path) {
+      return `${this.baseAPI}${path}`;
+    },
+    openInCura(path) {
+      if (!this.isMeshFile(path)) {
+        this.$toast.warning("Select an STL/OBJ file to open in Cura");
+        return;
+      }
+
+      const modelUrl = this.fileUrl(path);
+      const curaLink = `cura://open?url=${encodeURIComponent(modelUrl)}`;
+      let visibilityChanged = false;
+
+      const onVisibilityChange = () => {
+        if (document.hidden) {
+          visibilityChanged = true;
+        }
+      };
+
+      document.addEventListener("visibilitychange", onVisibilityChange, {
+        once: true,
+      });
+
+      window.location.href = curaLink;
+
+      setTimeout(() => {
+        if (!visibilityChanged) {
+          this.$toast.info(
+            "Cura did not open automatically. Downloading the model file instead."
+          );
+          window.open(modelUrl, "_blank");
+        }
+      }, 1400);
+    },
     openBoxReport() {
       if (this.isLogged) this.boxReport = true;
       else this.modalLoginError = true;
