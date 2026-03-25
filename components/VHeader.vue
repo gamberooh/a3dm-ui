@@ -61,7 +61,7 @@
                     <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                   </svg>
                   | Settings
-                nuxt-link.flex.leading-6.block.px-4.py-2.text-sm.text-gray-700(class="dark:text-white" to="#" role="menuitem" tabindex="-1" @click="logout")
+                nuxt-link.flex.leading-6.block.px-4.py-2.text-sm.text-gray-700(class="dark:text-white" to="#" role="menuitem" tabindex="-1" @click.prevent="logout")
                   <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
                   </svg>
@@ -110,9 +110,9 @@ export default {
     }
   },
   methods: {
-    logout() {
-      this.$store.dispatch("auth/logout");
-      window.location.href = "/";
+    async logout() {
+      await this.$store.dispatch("auth/logout");
+      this.$router.push("/");
     },
   },
 };
