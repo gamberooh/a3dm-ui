@@ -118,7 +118,23 @@ export const actions = {
 
     return res;
   },
-  logout({ commit }) {
+  async logout({ commit, getters }) {
+    let api = this.$config.api;
+
+    if (getters.accessToken) {
+      try {
+        await fetch(`${api}/v1/auth/logout`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${getters.accessToken}`,
+          },
+        });
+      } catch (_) {
+        // Ignore network/API errors and always clear local session.
+      }
+    }
+
     commit("logout");
   },
 };
