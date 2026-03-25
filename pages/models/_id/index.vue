@@ -201,22 +201,20 @@
       span(v-if="!boxFilesToDownload") Show files ({{ model.uploads.length }})
       span(v-else) Close files box ({{ model.uploads.length }})
     .bg-green-50(v-if="boxFilesToDownload")
-      .px-3.pt-3(v-if="firstMeshUpload")
-        button.inline-flex.leading-6.justify-center.rounded-md.border.border-transparent.bg-blue-600.py-2.px-4.text-sm.font-medium.text-white.shadow-sm(
-          type="button"
-          class="hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
-          @click="openInCura(firstMeshUpload.filepath)"
-        ) Open in Cura
-        p.text-xs.text-gray-600.mt-2
-          | Works if Cura is installed and registered in your OS. If not, a direct file download will open.
       ul.divide-y.divide-gray-200.rounded-b-md.border.border-gray-200(role="list")
         li.flex.items-center.justify-between.py-3.pl-3.pr-4.text-sm(v-for="upload in model.uploads" :key="upload.id")
           .flex.w-0.flex-1.items-center
             svg.h-5.w-5.flex-shrink-0.text-gray-400(xmlns="http://www.w3.org/2000/svg", viewbox="0 0 20 20", fill="currentColor", aria-hidden="true")
               path(fill-rule="evenodd", d="M15.621 4.379a3 3 0 00-4.242 0l-7 7a3 3 0 004.241 4.243h.001l.497-.5a.75.75 0 011.064 1.057l-.498.501-.002.002a4.5 4.5 0 01-6.364-6.364l7-7a4.5 4.5 0 016.368 6.36l-3.455 3.553A2.625 2.625 0 119.52 9.52l3.45-3.451a.75.75 0 111.061 1.06l-3.45 3.451a1.125 1.125 0 001.587 1.595l3.454-3.553a3 3 0 000-4.242z", clip-rule="evenodd")
-            span.ml-2.w-0.flex-1.truncate {{ getFileName(upload.filepath) }}
-          .ml-4.flex-shrink-0
-            nuxt-link.font-medium.text-black-700(:to="baseAPI + '' + upload.filepath" target="_new" download class="hover:underline") Download
+            span.ml-2.w-0.flex-1.truncate {{ getDisplayFileName(upload.filepath) }}
+          .ml-4.flex.flex-shrink-0.items-center.gap-3
+            button.font-medium(
+              type="button"
+              :class="{ 'text-blue-700 hover:underline': isMeshFile(upload.filepath), 'text-gray-400 cursor-not-allowed': !isMeshFile(upload.filepath) }"
+              :disabled="!isMeshFile(upload.filepath)"
+              @click="openInCura(upload.filepath)"
+            ) Open in Cura
+            button.font-medium.text-black-700(type="button" class="hover:underline" @click="downloadUpload(upload.filepath)") Download
 
 
 </template>
@@ -257,13 +255,6 @@ export default {
   computed: {
     ...mapGetters(["isLoading"]),
     ...mapGetters("auth", ["me", "isLogged"]),
-    firstMeshUpload() {
-      if (!this.model.uploads || this.model.uploads.length === 0) {
-        return null;
-      }
-
-      return this.model.uploads.find((upload) => this.isMeshFile(upload.filepath));
-    },
   },
   created() {
     this.id = this.$route.params.id;
@@ -287,10 +278,23 @@ export default {
       }
 
       const lower = path.toLowerCase();
-      return lower.endsWith(".stl") || lower.endsWith(".obj");
+      return (
+        lower.endsWith(".stl") ||
+        lower.endsWith(".obj") ||
+        lower.endsWith(".octet-stream")
+      );
     },
     fileUrl(path) {
       return `${this.baseAPI}${path}`;
+    },
+    getDisplayFileName(path) {
+      const name = this.getFileName(path);
+
+      if (name.toLowerCase().endsWith(".octet-stream")) {
+        return name.replace(/\.octet-stream$/i, ".obj");
+      }
+
+      return name;
     },
     openInCura(path) {
       if (!this.isMeshFile(path)) {
@@ -322,6 +326,29 @@ export default {
           window.open(modelUrl, "_blank");
         }
       }, 1400);
+    },
+    async downloadUpload(path) {
+      const url = this.fileUrl(path);
+      const filename = this.getDisplayFileName(path);
+
+      try {
+        const response = await fetch(url);
+        if (!response.ok) {
+          throw new Error("download failed");
+        }
+
+        const blob = await response.blob();
+        const objectUrl = window.URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = objectUrl;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        window.URL.revokeObjectURL(objectUrl);
+      } catch (_) {
+        this.$toast.error("Unable to download this file right now");
+      }
     },
     openBoxReport() {
       if (this.isLogged) this.boxReport = true;
