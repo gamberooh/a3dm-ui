@@ -302,18 +302,11 @@ export default {
       }
     },
     checkExt(name) {
-      const exts = [
-        ".stl",
-        ".obj",
-        ".png",
-        ".jpg",
-        ".jpeg",
-        ".gif",
-        ".webp",
-        ".blend",
-      ];
+      const exts = [".stl", ".obj", ".png", ".jpg", ".jpeg", ".webp"];
+      const lower = name.toLowerCase();
+
       for (const ext of exts) {
-        if (name.toLowerCase().indexOf(ext) > 0) return true;
+        if (lower.endsWith(ext)) return true;
       }
 
       return false;
