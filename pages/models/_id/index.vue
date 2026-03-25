@@ -215,6 +215,9 @@
               @click="openInCura(upload.filepath)"
             ) Open in Cura
             button.font-medium.text-black-700(type="button" class="hover:underline" @click="downloadUpload(upload.filepath)") Download
+      .flex.justify-between.items-center.mb-6.w-full(v-if="boxFilesToDownload")
+        <p class="w-full text-center bg-indigo-400 rounded-xl p-5 text-white font-semibold"><i>Hai trovato un modello che ti piace?</i> Scaricalo!<br>Caricalo su CURA e prepare il gcode da mettere su <a href="https://octoprint.org" target="_blank" class="text-white underline">Octoprint</a> per mandarlo in stampa.</p>
+        .flex.h-52
 
 
 </template>
