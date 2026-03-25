@@ -96,7 +96,7 @@
                 | @
                 span.underline {{ model.author.username }}
       .description.mt-3(class="dark:text-white")
-        p {{ model.description }}
+        p.whitespace-pre-wrap {{ model.description }}
 
     .mb-5.text-right
       button.inline-flex.leading-6.justify-center.rounded-md.border.border-transparent.bg-white.py-2.px-4.mr-2.text-sm.font-medium.text-black.shadow-sm(
