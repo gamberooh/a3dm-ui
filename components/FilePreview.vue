@@ -61,7 +61,7 @@ export default {
       );
     },
     isStl(path) {
-      return this.checkExt(path, "stl") || this.checkExt(path, "sla");
+      return this.checkExt(path, "stl");
     },
     isObj(path) {
       return this.checkExt(path, "obj") || this.checkExt(path, "octet-stream");
